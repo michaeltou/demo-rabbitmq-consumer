@@ -1,12 +1,9 @@
 package com.tm.demorabbitmqconsumber;
 
 import com.alibaba.fastjson.JSON;
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.tools.json.JSONUtil;
 import com.tm.common.model.User;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.juli.logging.Log;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
@@ -17,38 +14,30 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
-
 @Slf4j
-public class TopicAllReceiver {
+public class DemoReceiver {
 
 
-    @RabbitListener(queues = "topic.all.queue",containerFactory = "ackTaskContainerFactory")
-    public void process(@Payload User user,
+    @RabbitListener(queues = "topic.demo.queue",containerFactory = "ackTaskContainerFactory")
+    public void processMsg(@Payload User user,
                         @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag,
                         Channel channel,
-                        @Header(AmqpHeaders.RECEIVED_ROUTING_KEY) String routingKey
+                        @Header(AmqpHeaders.RECEIVED_ROUTING_KEY) String routingKey) {
 
-                        ) {
-
+        //用于标识，系统是否存在异常
         boolean hasException = false;
+        //用于标识，系统是否存在业务异常
         boolean hasBussinessException = false;
 
         try {
-            //记录消息日志
-            log.info("xxx 业务，收到消息，开始处理，消息体：{},routingKey:{}, DELIVERY_TAG:{},ChannelNumber:",
-                    JSON.toJSON(user), routingKey,deliveryTag,channel.getChannelNumber());
 
             //业务逻辑
-          //  Thread.sleep(1000);
-
+            Thread.sleep(1000);
 
         } catch (Exception e) {
             hasException = true;
             log.info("xxx消息处理发生异常，关键信息是：", e.getMessage(),e);
         }finally {
-            //记录消息日志
-            log.info("xxx 业务，收到消息 处理完成，消息体：{},routingKey:{}, DELIVERY_TAG:{},ChannelNumber:",
-                    JSON.toJSON(user), routingKey,deliveryTag,channel.getChannelNumber());
             try {
                 if(hasException){
                     //requeue：需根据具体场景设置true or false。需要放回队列，requeue设置true, 如果删除消息(false)，
@@ -63,9 +52,8 @@ public class TopicAllReceiver {
             }catch (IOException e){
                 log.error("反馈给消息中心发生异常,异常信息是：{}",e.getMessage(),e);
             }
+
+
         }
     }
-
-
-
 }

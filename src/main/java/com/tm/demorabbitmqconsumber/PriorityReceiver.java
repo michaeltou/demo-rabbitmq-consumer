@@ -1,13 +1,9 @@
 package com.tm.demorabbitmqconsumber;
 
 import com.alibaba.fastjson.JSON;
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.tools.json.JSONUtil;
 import com.tm.common.model.User;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.juli.logging.Log;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -15,15 +11,16 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Component
 
 @Slf4j
-public class TopicAllReceiver {
+public class PriorityReceiver {
 
 
-    @RabbitListener(queues = "topic.all.queue",containerFactory = "ackTaskContainerFactory")
-    public void process(@Payload User user,
+    @RabbitListener(queues = "priority.queue",containerFactory = "ackTaskContainerFactory")
+    public void process(@Payload Map message,
                         @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag,
                         Channel channel,
                         @Header(AmqpHeaders.RECEIVED_ROUTING_KEY) String routingKey
@@ -35,11 +32,11 @@ public class TopicAllReceiver {
 
         try {
             //记录消息日志
-            log.info("xxx 业务，收到消息，开始处理，消息体：{},routingKey:{}, DELIVERY_TAG:{},ChannelNumber:",
-                    JSON.toJSON(user), routingKey,deliveryTag,channel.getChannelNumber());
+            log.info("start收到消息消息体：{},",
+                    JSON.toJSON(message));
 
             //业务逻辑
-          //  Thread.sleep(1000);
+             Thread.sleep(1000);
 
 
         } catch (Exception e) {
@@ -47,8 +44,7 @@ public class TopicAllReceiver {
             log.info("xxx消息处理发生异常，关键信息是：", e.getMessage(),e);
         }finally {
             //记录消息日志
-            log.info("xxx 业务，收到消息 处理完成，消息体：{},routingKey:{}, DELIVERY_TAG:{},ChannelNumber:",
-                    JSON.toJSON(user), routingKey,deliveryTag,channel.getChannelNumber());
+           // log.info("end 结束处理消息 ，消息体：{},",  JSON.toJSON(message));
             try {
                 if(hasException){
                     //requeue：需根据具体场景设置true or false。需要放回队列，requeue设置true, 如果删除消息(false)，
